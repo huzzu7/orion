@@ -19,7 +19,7 @@ def generate_launch_description():
 
     # Process the URDF file
     pkg_path = os.path.join(get_package_share_directory('orion_simulation'))
-    xacro_file = os.path.join(pkg_path, 'description', 'robot.urdf.xacro')
+    xacro_file = os.path.join(pkg_path, 'description/urdf', 'robot.urdf.xacro')
     robot_description_config = xacro.process_file(xacro_file)
     world_file = os.path.join(pkg_path, 'worlds', 'empty.world')
     
@@ -30,6 +30,13 @@ def generate_launch_description():
         executable='robot_state_publisher',
         output='screen',
         parameters=[params]
+    )
+    
+    node_joint_state_publisher = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
+        output='screen'
     )
 
     # Launch!
@@ -43,4 +50,5 @@ def generate_launch_description():
             output='screen'
         ),
         node_robot_state_publisher,
+        node_joint_state_publisher,
     ])

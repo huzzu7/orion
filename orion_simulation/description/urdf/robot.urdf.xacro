@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+
+<robot name="orion" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find orion_simulation)/description/urdf/robot_properties.urdf.xacro"/>
+  <xacro:include filename="$(find orion_simulation)/description/urdf/wheel.urdf.xacro"/>
+  <xacro:include filename="$(find orion_simulation)/description/urdf/inertia.urdf.xacro"/>
+
+  <!-- Robot Base -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}" />
+      </geometry>
+      <material name="Cyan">
+        <color rgba="0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+
+    <collision>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}" />
+      </geometry>
+    </collision>
+
+    <xacro:box_inertia m="15" w="${base_width}" d="${base_length}" h="${base_height}" />
+  </link>
+
+  <!-- Robot Footprint -->
+  <link name="base_footprint" />
+  <joint name="base_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="base_footprint" />
+    <origin xyz="0.0 0.0 ${-(wheel_radius+wheel_zoff)}" rpy="0 0 0" />
+  </joint>
+
+  <!-- Front wheels: -->
+  <xacro:wheel prefix="drivewheel_l" x_reflect="-1" y_reflect="1" />
+  <xacro:wheel prefix="drivewheel_r" x_reflect="-1" y_reflect="-1" />
+
+  <!-- Caster Wheel --> 
+  <link name="front_caster">
+    <visual>
+      <geometry>
+        <sphere radius="${wheel_radius+wheel_zoff-(base_height/2)}" />
+      </geometry>
+      <material name="Cyan">
+        <color rgba="0 1.0 1.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="${wheel_radius+wheel_zoff-(base_height/2)}" />
+      </geometry>
+    </collision>
+
+    <xacro:sphere_inertia m="0.5" r="${wheel_radius+wheel_zoff-(base_height/2)}" />
+  </link>
+
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="front_caster" />
+    <origin xyz="${caster_xoff} 0.0 ${-(base_height/2)}" rpy="0 0 0" />
+  </joint>
+
+
+  <gazebo>
+    <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
+      <ros>
+        <namespace>/demo</namespace>
+      </ros>
+
+      <!-- wheels -->
+      <left_joint>drivewheel_l_joint</left_joint>
+      <right_joint>drivewheel_r_joint</right_joint>
+
+      <!-- kinematics -->
+      <wheel_separation>0.4</wheel_separation>
+      <wheel_diameter>0.2</wheel_diameter>
+
+      <!-- limits -->
+      <max_wheel_torque>20</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+
+      <!-- output -->
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>false</publish_odom_tf>
+      <publish_wheel_tf>true</publish_wheel_tf>
+
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+    </plugin>
+  </gazebo>
+
+</robot>
