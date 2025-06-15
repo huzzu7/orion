@@ -42,7 +42,7 @@
   <link name="front_caster">
     <visual>
       <geometry>
-        <sphere radius="${wheel_radius+wheel_zoff-(base_height/2)}" />
+        <sphere radius="${caster_radius}" />
       </geometry>
       <material name="Cyan">
         <color rgba="0 1.0 1.0 1.0" />
@@ -51,11 +51,11 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <sphere radius="${wheel_radius+wheel_zoff-(base_height/2)}" />
+        <sphere radius="${caster_radius}" />
       </geometry>
     </collision>
 
-    <xacro:sphere_inertia m="0.5" r="${wheel_radius+wheel_zoff-(base_height/2)}" />
+    <xacro:sphere_inertia m="0.5" r="${caster_radius}" />
   </link>
 
   <joint name="caster_joint" type="fixed">
