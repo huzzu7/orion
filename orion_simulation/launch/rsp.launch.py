@@ -39,16 +39,17 @@ def generate_launch_description():
         output='screen'
     )
 
+    gazebo_launch = ExecuteProcess(
+        cmd=['ign', 'gazebo', '-r', '--gui', world_file],
+        output='screen'
+    )
     # Launch!
     return LaunchDescription([
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='false',
             description='Use sim time if true'),
-        ExecuteProcess(
-            cmd=['ign', 'gazebo', '-r', '--gui', 'true', world_file],
-            output='screen'
-        ),
+        gazebo_launch,
         node_robot_state_publisher,
         node_joint_state_publisher,
     ])

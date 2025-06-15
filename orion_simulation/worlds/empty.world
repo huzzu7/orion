@@ -1,40 +1,42 @@
 <?xml version="1.0" ?>
 <sdf version="1.8">
     <world name="world_demo">
-      <physics name="1ms" type="ignored">
-        <max_step_size>0.001</max_step_size>
-        <real_time_factor>1.0</real_time_factor>
-      </physics>
-      <!-- Add an empty plane -->
-      <model name="ground_plane">
-        <static>true</static>
-        <link name="link">
-          <collision name="collision">
-            <geometry>
-              <plane>
-                <normal>0 0 1</normal>
-                <size>100 100</size>
-              </plane>
-            </geometry>
-            <surface>
-              <contact>
-                <collide_without_contact>true</collide_without_contact>
-              </contact>
-            </surface>
-          </collision>
-          <visual name="visual">
-            <geometry>
-              <plane>
-                <normal>0 0 1</normal>
-                <size>100 100</size>
-              </plane>
-            </geometry>
-            <material>
-              <ambient>0 1 0 1</ambient>   
-              <diffuse>0 1 0 1</diffuse>
-            </material>
-          </visual>
-        </link>
-      </model>
+        <physics name="1ms" type="ignored">
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1.0</real_time_factor>
+        </physics>
+        <!-- Add an empty plane -->
+        <model name="ground_plane">
+            <static>true</static>
+            <link name="link">
+                <collision name="collision">
+                    <geometry>
+                        <plane>
+                            <normal>0 0 1</normal>
+                            <size>100 100</size>
+                        </plane>
+                    </geometry>
+                    <surface>
+                        <contact>
+                            <collide_without_contact>true</collide_without_contact>
+                        </contact>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <plane>
+                            <normal>0 0 1</normal>
+                            <size>100 100</size>
+                        </plane>
+                    </geometry>
+                    <material>
+                        <ambient>0 1 0 1</ambient>
+                        <diffuse>0 1 0 1</diffuse>
+                    </material>
+                </visual>
+            </link>
+        </model>
     </world>
 </sdf>
+
+<dialog name="quick_start" show_again="true"/>
