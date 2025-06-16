@@ -22,12 +22,13 @@ def generate_launch_description():
     xacro_file = os.path.join(pkg_path, 'description/urdf', 'robot.urdf.xacro')
     robot_description_config = xacro.process_file(xacro_file)
     world_file = os.path.join(pkg_path, 'worlds', 'empty.world')
-    
+
     # Create a robot_state_publisher node
     params = {'robot_description': robot_description_config.toxml(), 'use_sim_time': use_sim_time}
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
+        name='robot_state_publisher', 
         output='screen',
         parameters=[params]
     )
@@ -39,10 +40,26 @@ def generate_launch_description():
         output='screen'
     )
 
-    gazebo_launch = ExecuteProcess(
-        cmd=['ign', 'gazebo', '-r', '--gui', world_file],
+    gazebo_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('ros_ign_gazebo'), 'launch', 'ign_gazebo.launch.py')),
+            launch_arguments={'gz_args': world_file}.items()  
+            )
+    
+    rviz_launch = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+    )
+    
+    spawn_robot = Node(
+        package='ros_gz_sim',
+        executable='create',
+        arguments=['-topic', 'robot_description', '-entity', 'orion'],
         output='screen'
     )
+
     # Launch!
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -50,6 +67,8 @@ def generate_launch_description():
             default_value='false',
             description='Use sim time if true'),
         gazebo_launch,
+        spawn_robot,
+        rviz_launch,
         node_robot_state_publisher,
-        node_joint_state_publisher,
+        node_joint_state_publisher
     ])

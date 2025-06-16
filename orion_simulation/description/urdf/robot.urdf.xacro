@@ -2,95 +2,64 @@
 
 <robot name="orion" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <xacro:include filename="$(find orion_simulation)/description/urdf/robot_properties.urdf.xacro"/>
-  <xacro:include filename="$(find orion_simulation)/description/urdf/wheel.urdf.xacro"/>
-  <xacro:include filename="$(find orion_simulation)/description/urdf/inertia.urdf.xacro"/>
+<xacro:include filename="$(find orion_simulation)/description/urdf/robot_properties.urdf.xacro"/>
+<xacro:include filename="$(find orion_simulation)/description/urdf/diff_wheels.urdf.xacro"/>
+<xacro:include filename="$(find orion_simulation)/description/urdf/inertial_macros.xacro" />
 
-  <!-- Robot Base -->
-  <link name="base_link">
+<!-- Robot Base -->
+<link name="base_link"> </link>
+
+<joint name="chassis_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="chassis"/>
+    <origin xyz="-0.1 0 0"/>
+</joint>
+
+<link name="chassis">
     <visual>
-      <geometry>
-        <box size="${base_length} ${base_width} ${base_height}" />
-      </geometry>
-      <material name="Cyan">
-        <color rgba="0 1.0 1.0 1.0" />
-      </material>
+        <origin xyz="${base_height} 0 ${base_height/2}" rpy="0 0 0"/>
+        <geometry>
+            <box size="${base_length} ${base_width} ${base_height}"/>
+        </geometry>
+        <material name="white"/>
     </visual>
 
     <collision>
-      <geometry>
-        <box size="${base_length} ${base_width} ${base_height}" />
-      </geometry>
+        <origin xyz="${base_height} 0 ${base_height/2}" rpy="0 0 0"/>
+        <geometry>
+            <box size="${base_length} ${base_width} ${base_height}"/>
+        </geometry>
     </collision>
 
-    <xacro:box_inertia m="15" w="${base_width}" d="${base_length}" h="${base_height}" />
-  </link>
+    <xacro:inertial_box mass="0.5" x="0.3" y="0.3" z="0.15">
+      <origin xyz="${base_height} 0 ${base_height/2}" rpy="0 0 0"/>
+    </xacro:inertial_box>
+</link>
 
-  <!-- Robot Footprint -->
-  <link name="base_footprint" />
-  <joint name="base_joint" type="fixed">
-    <parent link="base_link" />
-    <child link="base_footprint" />
-    <origin xyz="0.0 0.0 ${-(wheel_radius+wheel_zoff)}" rpy="0 0 0" />
-  </joint>
+<!-- LEFT WHEEL -->
 
-  <!-- Front wheels: -->
-  <xacro:wheel prefix="drivewheel_l" x_reflect="-1" y_reflect="1" />
-  <xacro:wheel prefix="drivewheel_r" x_reflect="-1" y_reflect="-1" />
 
-  <!-- Caster Wheel --> 
-  <link name="front_caster">
+<xacro:wheel prefix="left" reflect="1" />
+<xacro:wheel prefix="right" reflect="-1" />
+
+
+<joint name="caster_wheel_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="caster_wheel"/>
+    <origin xyz="0.24 0 0" rpy="0 0 0"/>
+</joint>
+
+<link name="caster_wheel">
     <visual>
-      <geometry>
-        <sphere radius="${caster_radius}" />
-      </geometry>
-      <material name="Cyan">
-        <color rgba="0 1.0 1.0 1.0" />
-      </material>
+        <geometry>
+            <sphere radius="0.05" />
+        </geometry>
+        <material name="black"/>
     </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <sphere radius="${caster_radius}" />
-      </geometry>
-    </collision>
 
-    <xacro:sphere_inertia m="0.5" r="${caster_radius}" />
-  </link>
-
-  <joint name="caster_joint" type="fixed">
-    <parent link="base_link" />
-    <child link="front_caster" />
-    <origin xyz="${caster_xoff} 0.0 ${-(base_height/2)}" rpy="0 0 0" />
-  </joint>
-
-
-  <gazebo>
-    <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
-      <ros>
-        <namespace>/demo</namespace>
-      </ros>
-
-      <!-- wheels -->
-      <left_joint>drivewheel_l_joint</left_joint>
-      <right_joint>drivewheel_r_joint</right_joint>
-
-      <!-- kinematics -->
-      <wheel_separation>0.4</wheel_separation>
-      <wheel_diameter>0.2</wheel_diameter>
-
-      <!-- limits -->
-      <max_wheel_torque>20</max_wheel_torque>
-      <max_wheel_acceleration>1.0</max_wheel_acceleration>
-
-      <!-- output -->
-      <publish_odom>true</publish_odom>
-      <publish_odom_tf>false</publish_odom_tf>
-      <publish_wheel_tf>true</publish_wheel_tf>
-
-      <odometry_frame>odom</odometry_frame>
-      <robot_base_frame>base_link</robot_base_frame>
-    </plugin>
-  </gazebo>
+    <xacro:inertial_sphere mass="0.1" radius="0.05">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_sphere>
+</link>
 
 </robot>
