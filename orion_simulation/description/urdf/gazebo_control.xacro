@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <ros2_control name="OrionSystem" type="system">
+  <hardware>
+    <plugin>ros_gz_sim/DefaultSystemHardwarePlugin</plugin>
+  </hardware>
+  <joint name="left_wheel_joint">
+    <command_interface name="velocity"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="right_wheel_joint">
+    <command_interface name="velocity"/>
+    <state_interface name="velocity"/>
+  </joint>
+</ros2_control>
+
+</robot>

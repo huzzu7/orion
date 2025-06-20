@@ -5,6 +5,7 @@
 <xacro:include filename="$(find orion_simulation)/description/urdf/robot_properties.urdf.xacro"/>
 <xacro:include filename="$(find orion_simulation)/description/urdf/diff_wheels.urdf.xacro"/>
 <xacro:include filename="$(find orion_simulation)/description/urdf/inertial_macros.xacro" />
+<xacro:include filename="$(find orion_simulation)/description/urdf/gazebo_control.xacro" />
 
 <!-- Robot Base -->
 <link name="base_link"> </link>
@@ -15,6 +16,7 @@
     <origin xyz="-0.1 0 0"/>
 </joint>
 
+<!-- Base Chassis -->
 <link name="chassis">
     <visual>
         <origin xyz="${base_height} 0 ${base_height/2}" rpy="0 0 0"/>
@@ -36,13 +38,15 @@
     </xacro:inertial_box>
 </link>
 
-<!-- LEFT WHEEL -->
+<gazebo reference="chassis">
+    <material>Gazebo/White</material>
+</gazebo>
 
-
+<!-- Diff Wheels -->
 <xacro:wheel prefix="left" reflect="1" />
 <xacro:wheel prefix="right" reflect="-1" />
 
-
+<!-- Caster Wheels -->
 <joint name="caster_wheel_joint" type="fixed">
     <parent link="chassis"/>
     <child link="caster_wheel"/>
@@ -61,5 +65,11 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </xacro:inertial_sphere>
 </link>
+
+<gazebo reference="chassis">
+    <material>Gazebo/Black</material>
+    <mu1 value="0.001"/>
+    <mu2 value="0.001"/>
+</gazebo>
 
 </robot>
