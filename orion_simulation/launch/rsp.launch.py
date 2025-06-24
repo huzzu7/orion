@@ -23,6 +23,28 @@ def generate_launch_description():
     robot_description_config = xacro.process_file(xacro_file)
     world_file = os.path.join(pkg_path, 'worlds', 'empty.world')
 
+    controller_yaml = os.path.join(
+        pkg_path,
+        'config',
+        'diff_drive_controller.yaml'
+    )
+    
+    controller_manager = Node(
+        package='controller_manager',
+        executable='ros2_control_node',
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            {'robot_description': robot_description_config.toxml()},
+            controller_yaml
+        ],
+        output='screen'
+    )
+    
+    load_diff_drive = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'diff_drive_controller'],
+        output='screen'
+    )
+    
     # Create a robot_state_publisher node
     params = {'robot_description': robot_description_config.toxml(), 'use_sim_time': use_sim_time}
     node_robot_state_publisher = Node(
@@ -69,6 +91,7 @@ def generate_launch_description():
         gazebo_launch,
         spawn_robot,
         rviz_launch,
+        load_diff_drive,
         node_robot_state_publisher,
         node_joint_state_publisher
     ])
