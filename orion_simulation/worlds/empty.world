@@ -38,5 +38,3 @@
         </model>
     </world>
 </sdf>
-
-<dialog name="quick_start" show_again="true"/>
