@@ -2,93 +2,116 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 
+
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+
 from launch_ros.actions import Node
-from launch.actions import ExecuteProcess
-from launch.actions import TimerAction
 
-
-import xacro
 
 
 def generate_launch_description():
 
-    # Check if we're told to use sim time
-    use_sim_time = LaunchConfiguration('use_sim_time')
 
-    # Process the URDF file
-    pkg_path = os.path.join(get_package_share_directory('orion_simulation'))
-    xacro_file = os.path.join(pkg_path, 'description/urdf', 'robot.urdf.xacro')
-    robot_description_config = xacro.process_file(xacro_file)
-    world_file = os.path.join(pkg_path, 'worlds', 'empty.world')
-    
-    controller_params_file = os.path.join(get_package_share_directory("orion_simulation"),'config','diff_drive_controller.yaml')
-    controller_manager = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        parameters=[{'robot_description': robot_description_config.toxml()},
-                    controller_params_file]
-    )
-    
-    load_diff_drive = TimerAction(
-        period=5.0,  # delay in seconds
-        actions=[ExecuteProcess(
-            cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'diff_drive_controller'],
-            output='screen'
-        )]
-    )
-    
-    # Create a robot_state_publisher node
-    params = {'robot_description': robot_description_config.toxml(), 'use_sim_time': use_sim_time}
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher', 
-        output='screen',
-        parameters=[params]
-    )
-    
-    joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        output='screen'
+    # Include the robot_state_publisher launch file, provided by our own package. Force sim time to be enabled
+    # !!! MAKE SURE YOU SET THE PACKAGE NAME CORRECTLY !!!
+
+    package_name='orion_simulation' #<--- CHANGE ME
+
+    rsp = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory(package_name),'launch','rsp.launch.py'
+                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true'}.items()
     )
 
-
-    gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')),
-            launch_arguments={'gz_args': [f'-r {world_file}'], 'on_exit_shutdown': 'true'}.items()
+    joystick = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory(package_name),'launch','joystick.launch.py'
+                )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
+
+    twist_mux_params = os.path.join(get_package_share_directory(package_name),'config','twist_mux.yaml')
+    twist_mux = Node(
+            package="twist_mux",
+            executable="twist_mux",
+            parameters=[twist_mux_params, {'use_sim_time': True}],
+            remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')]
+        )
+
+
+    default_world = os.path.join(
+        get_package_share_directory(package_name),
+        'worlds',
+        'empty.world'
+        )    
     
+    world = LaunchConfiguration('world')
+
+    world_arg = DeclareLaunchArgument(
+        'world',
+        default_value=default_world,
+        description='World to load'
+        )
+
     rviz_launch = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
         output='screen',
     )
-    
-    spawn_robot = Node(
-        package='ros_gz_sim',
-        executable='create',
-        arguments=['-topic', 'robot_description','-name', 'my_bot','-z', '0.1'],
-        output='screen')
+        
+    # Include the Gazebo launch file, provided by the ros_gz_sim package
+    gazebo = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
+                    launch_arguments={'gz_args': ['-r -v4 ', world], 'on_exit_shutdown': 'true'}.items()
+             )
 
-    # Launch!
+    # Run the spawner node from the ros_gz_sim package. The entity name doesn't really matter if you only have a single robot.
+    spawn_entity = Node(package='ros_gz_sim', executable='create',
+                        arguments=['-topic', 'robot_description',
+                                   '-name', 'orion',
+                                   '-z', '1.0'],
+                        output='screen')
+
+
+    diff_drive_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["diff_cont"],
+    )
+
+    joint_broad_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_broad"],
+    )
+
+
+    bridge_params = os.path.join(get_package_share_directory(package_name),'config','gz_bridge.yaml')
+    ros_gz_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=[
+            '--ros-args',
+            '-p',
+            f'config_file:={bridge_params}',
+        ]
+    )
+
+    # Launch them all!
     return LaunchDescription([
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='false',
-            description='Use sim time if true'),
-        robot_state_publisher,
-        joint_state_publisher,
-        gazebo_launch,
-        spawn_robot,
+        rsp,
+        # joystick,
+        # twist_mux,
+        world_arg,
+        gazebo,
+        spawn_entity,
         rviz_launch,
-        controller_manager,
-        load_diff_drive,
+        diff_drive_spawner,
+        joint_broad_spawner,
+        ros_gz_bridge,
+        # ros_gz_image_bridge
     ])
