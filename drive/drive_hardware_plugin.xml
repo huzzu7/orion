@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<library path="drive">
+  <class name="serial_drive/SerialDriveHardware"
+         type="serial_drive::SerialDriveHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ROS2 Control hardware interface for differential drive robot using serial communication.
+    </description>
+  </class>
+</library> 
