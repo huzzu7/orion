@@ -1,0 +1,43 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50  # Hz
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+drive_hardware:
+  ros__parameters:
+    serial_port: "/dev/ttyACM0"  # Adjust this to your actual serial port
+    baud_rate: "115200"
+    joints:
+      - left_wheel_joint
+      - right_wheel_joint
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names: ["left_wheel_joint"]
+    right_wheel_names: ["right_wheel_joint"]
+    
+    wheel_separation: 0.25  # Distance between wheels in meters - adjust to your robot
+    wheel_radius: 0.05     # Wheel radius in meters - adjust to your robot
+    
+    use_stamped_vel: false
+    
+    # Velocity limits and gains
+    linear.x.has_velocity_limits: true
+    linear.x.max_velocity: 1.0  # meters per second
+    linear.x.min_velocity: -1.0 # meters per second
+    
+    angular.z.has_velocity_limits: true
+    angular.z.max_velocity: 2.0  # radians per second
+    angular.z.min_velocity: -2.0 # radians per second
+
+    # Publishing frequency for feedback
+    publish_rate: 50.0
+    
+    # Wheel encoders
+    position_feedback: true
+    velocity_feedback: true 
