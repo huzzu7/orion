@@ -13,41 +13,29 @@ import xacro
 
 
 def generate_launch_description():
-
-    package_name='orion_simulation' #<--- CHANGE ME
-    pkg_path = os.path.join(get_package_share_directory('orion_simulation'))
-    robot_description = get_package_share_directory('orion_description')
-    xacro_file = os.path.join(robot_description, 'urdf', 'robot.urdf.xacro')
-    robot_description_config = xacro.process_file(xacro_file)
-    
-    world_file = os.path.join(pkg_path, 'worlds', 'empty.world')
     
 
-    bringup_dir = get_package_share_directory('orion_bringup')
-    drive_dir = get_package_share_directory('drive')
+    bringup_pkg = get_package_share_directory('orion_bringup')
+    description_pkg = get_package_share_directory('orion_description')
+    simulation_pkg = get_package_share_directory('orion_simulation')
+    drive_pkg = get_package_share_directory('drive')
     
-    rsp = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher', 
-        output='screen',
-        parameters=[{'robot_description': robot_description_config.toxml(),
-                     'use_sim_time': True}]
+    robot_description_dir = os.path.join(description_pkg, 'urdf', 'robot.urdf.xacro')
+    default_world = os.path.join( simulation_pkg,'worlds','empty.world')    
+    
+    rsp = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('orion_bringup'),'launch','rsp.launch.py'
+            )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
-        
-    default_world = os.path.join(
-        get_package_share_directory(package_name),
-        'worlds',
-        'empty.world'
-        )    
     
     world = LaunchConfiguration('world')
-
+    
     world_arg = DeclareLaunchArgument(
         'world',
         default_value=default_world,
         description='World to load'
-        )
+    )
 
     rviz_launch = Node(
         package='rviz2',
@@ -56,19 +44,18 @@ def generate_launch_description():
         output='screen',
     )
         
-    # Include the Gazebo launch file, provided by the ros_gz_sim package
-    gazebo = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
+    # Launch Gazebo
+    gazebo = IncludeLaunchDescription(PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
                     launch_arguments={'gz_args': ['-r -v4 ', world], 'on_exit_shutdown': 'true'}.items()
-             )
+    )
 
-    # Run the spawner node from the ros_gz_sim package. The entity name doesn't really matter if you only have a single robot.
+    # Run the spawner node from the ros_gz_sim package.
     spawn_entity = Node(package='ros_gz_sim', executable='create',
                         arguments=['-topic', 'robot_description',
-                                   '-name', 'orion',
-                                   '-z', '1.0'],
-                        output='screen')
+                                   '-name', 'orion','-z', '1.0'],
+                        output='screen'
+    )
 
 
     diff_drive_spawner = Node(
@@ -84,7 +71,7 @@ def generate_launch_description():
     )
 
 
-    bridge_params = os.path.join(bringup_dir,'config','gz_bridge.yaml')
+    bridge_params = os.path.join(bringup_pkg,'config','gz_bridge.yaml')
     ros_gz_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",

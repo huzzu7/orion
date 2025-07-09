@@ -28,10 +28,6 @@ install(DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
 )
 
-install(DIRECTORY description/
-  DESTINATION share/${PROJECT_NAME}/description
-)
-
 install(DIRECTORY worlds/
   DESTINATION share/${PROJECT_NAME}/worlds
 )
