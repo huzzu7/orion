@@ -24,9 +24,6 @@ if(BUILD_TESTING)
 endif()
 
 # Make sure your launch files are being installed
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
-)
 
 install(DIRECTORY worlds/
   DESTINATION share/${PROJECT_NAME}/worlds

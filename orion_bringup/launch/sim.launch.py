@@ -21,12 +21,12 @@ def generate_launch_description():
     drive_pkg = get_package_share_directory('drive')
     
     robot_description_dir = os.path.join(description_pkg, 'urdf', 'robot.urdf.xacro')
-    default_world = os.path.join( simulation_pkg,'worlds','empty.world')    
+    default_world = os.path.join(simulation_pkg,'worlds','empty.world')    
     
     rsp = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('orion_bringup'),'launch','rsp.launch.py'
-            )]), launch_arguments={'use_sim_time': 'true'}.items()
+                bringup_pkg,'launch','rsp.launch.py'
+                )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
     
     world = LaunchConfiguration('world')
@@ -45,7 +45,8 @@ def generate_launch_description():
     )
         
     # Launch Gazebo
-    gazebo = IncludeLaunchDescription(PythonLaunchDescriptionSource([os.path.join(
+    gazebo = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
                     launch_arguments={'gz_args': ['-r -v4 ', world], 'on_exit_shutdown': 'true'}.items()
     )
@@ -69,7 +70,6 @@ def generate_launch_description():
         executable="spawner",
         arguments=["joint_broad"],
     )
-
 
     bridge_params = os.path.join(bringup_pkg,'config','gz_bridge.yaml')
     ros_gz_bridge = Node(
