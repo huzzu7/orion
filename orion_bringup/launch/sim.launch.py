@@ -9,51 +9,33 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
-
+import xacro
 
 
 def generate_launch_description():
+    
 
-
-    # Include the robot_state_publisher launch file, provided by our own package. Force sim time to be enabled
-    # !!! MAKE SURE YOU SET THE PACKAGE NAME CORRECTLY !!!
-
-    package_name='orion_simulation' #<--- CHANGE ME
-
+    bringup_pkg = get_package_share_directory('orion_bringup')
+    description_pkg = get_package_share_directory('orion_description')
+    simulation_pkg = get_package_share_directory('orion_simulation')
+    drive_pkg = get_package_share_directory('drive')
+    
+    robot_description_dir = os.path.join(description_pkg, 'urdf', 'robot.urdf.xacro')
+    default_world = os.path.join(simulation_pkg,'worlds','empty.world')    
+    
     rsp = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory(package_name),'launch','rsp.launch.py'
-                )]), launch_arguments={'use_sim_time': 'true', 'use_ros2_control': 'true'}.items()
-    )
-
-    joystick = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory(package_name),'launch','joystick.launch.py'
+            PythonLaunchDescriptionSource([os.path.join(
+                bringup_pkg,'launch','rsp.launch.py'
                 )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
-
-    twist_mux_params = os.path.join(get_package_share_directory(package_name),'config','twist_mux.yaml')
-    twist_mux = Node(
-            package="twist_mux",
-            executable="twist_mux",
-            parameters=[twist_mux_params, {'use_sim_time': True}],
-            remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')]
-        )
-
-
-    default_world = os.path.join(
-        get_package_share_directory(package_name),
-        'worlds',
-        'empty.world'
-        )    
     
     world = LaunchConfiguration('world')
-
+    
     world_arg = DeclareLaunchArgument(
         'world',
         default_value=default_world,
         description='World to load'
-        )
+    )
 
     rviz_launch = Node(
         package='rviz2',
@@ -62,19 +44,19 @@ def generate_launch_description():
         output='screen',
     )
         
-    # Include the Gazebo launch file, provided by the ros_gz_sim package
+    # Launch Gazebo
     gazebo = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
                     launch_arguments={'gz_args': ['-r -v4 ', world], 'on_exit_shutdown': 'true'}.items()
-             )
+    )
 
-    # Run the spawner node from the ros_gz_sim package. The entity name doesn't really matter if you only have a single robot.
+    # Run the spawner node from the ros_gz_sim package.
     spawn_entity = Node(package='ros_gz_sim', executable='create',
                         arguments=['-topic', 'robot_description',
-                                   '-name', 'orion',
-                                   '-z', '1.0'],
-                        output='screen')
+                                   '-name', 'orion','-z', '1.0'],
+                        output='screen'
+    )
 
 
     diff_drive_spawner = Node(
@@ -89,8 +71,7 @@ def generate_launch_description():
         arguments=["joint_broad"],
     )
 
-
-    bridge_params = os.path.join(get_package_share_directory(package_name),'config','gz_bridge.yaml')
+    bridge_params = os.path.join(bringup_pkg,'config','gz_bridge.yaml')
     ros_gz_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -104,8 +85,6 @@ def generate_launch_description():
     # Launch them all!
     return LaunchDescription([
         rsp,
-        # joystick,
-        # twist_mux,
         world_arg,
         gazebo,
         spawn_entity,
@@ -113,5 +92,4 @@ def generate_launch_description():
         diff_drive_spawner,
         joint_broad_spawner,
         ros_gz_bridge,
-        # ros_gz_image_bridge
     ])

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(orion_simulation)
+project(orion_bringup)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -23,15 +23,12 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-# Make sure your launch files are being installed
-
-install(DIRECTORY worlds/
-  DESTINATION share/${PROJECT_NAME}/worlds
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
 )
 
 install(DIRECTORY config/
   DESTINATION share/${PROJECT_NAME}/config
 )
-
 
 ament_package()
