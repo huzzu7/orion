@@ -82,14 +82,38 @@ def generate_launch_description():
         ]
     )
 
+    joy_params = os.path.join(bringup_pkg,'config','joystick.yaml')
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        output='screen'
+    )
+    
+    teleop_node = Node(
+        package='teleop_twist_joy',
+        executable='teleop_node',
+        name='teleop_node',
+        output='screen',
+        parameters=[joy_params],
+        remappings=[('/cmd_vel', '/diff_cont/cmd_vel_unstamped')]
+    )
+
+
     # Launch them all!
     return LaunchDescription([
         rsp,
+        
+        joy_node,
+        teleop_node,
+
         world_arg,
         gazebo,
         spawn_entity,
         rviz_launch,
+        
         diff_drive_spawner,
         joint_broad_spawner,
         ros_gz_bridge,
+        
     ])
