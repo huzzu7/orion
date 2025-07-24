@@ -4,7 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
@@ -14,11 +14,11 @@ import xacro
 
 def generate_launch_description():
     
-
+    # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/diff_cont/cmd_vel_unstamped
+    # 
     bringup_pkg = get_package_share_directory('orion_bringup')
     description_pkg = get_package_share_directory('orion_description')
     simulation_pkg = get_package_share_directory('orion_simulation')
-    drive_pkg = get_package_share_directory('drive')
     
     robot_description_dir = os.path.join(description_pkg, 'urdf', 'robot.urdf.xacro')
     default_world = os.path.join(simulation_pkg,'worlds','empty.world')    
@@ -71,6 +71,16 @@ def generate_launch_description():
         arguments=["joint_broad"],
     )
 
+    delayed_diff_drive_spawner = TimerAction(
+        period=8.0,  # seconds
+        actions=[diff_drive_spawner]
+    )
+
+    delayed_joint_broad_spawner = TimerAction(
+        period=8.0,  # seconds
+        actions=[joint_broad_spawner]
+    )
+
     bridge_params = os.path.join(bringup_pkg,'config','gz_bridge.yaml')
     ros_gz_bridge = Node(
         package="ros_gz_bridge",
@@ -89,7 +99,7 @@ def generate_launch_description():
         gazebo,
         spawn_entity,
         rviz_launch,
-        diff_drive_spawner,
-        joint_broad_spawner,
+        delayed_diff_drive_spawner,
+        delayed_joint_broad_spawner,
         ros_gz_bridge,
     ])
