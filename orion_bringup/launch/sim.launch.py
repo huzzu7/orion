@@ -7,9 +7,12 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch.actions import TimerAction
 
 from launch_ros.actions import Node
 import xacro
+
+
 
 
 def generate_launch_description():
@@ -18,9 +21,9 @@ def generate_launch_description():
     bringup_pkg = get_package_share_directory('orion_bringup')
     description_pkg = get_package_share_directory('orion_description')
     simulation_pkg = get_package_share_directory('orion_simulation')
+    joy_pkg = get_package_share_directory('orion_joy')
     drive_pkg = get_package_share_directory('drive')
     
-    robot_description_dir = os.path.join(description_pkg, 'urdf', 'robot.urdf.xacro')
     default_world = os.path.join(simulation_pkg,'worlds','empty.world')    
     
     rsp = IncludeLaunchDescription(
@@ -112,8 +115,9 @@ def generate_launch_description():
         spawn_entity,
         rviz_launch,
         
-        diff_drive_spawner,
-        joint_broad_spawner,
+        TimerAction(period=10.0, actions=[diff_drive_spawner]),
+        TimerAction(period=10.0, actions=[joint_broad_spawner]),
+
         ros_gz_bridge,
         
     ])
