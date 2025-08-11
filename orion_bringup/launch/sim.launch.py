@@ -7,9 +7,12 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch.actions import TimerAction
 
 from launch_ros.actions import Node
 import xacro
+
+
 
 
 def generate_launch_description():
@@ -19,8 +22,9 @@ def generate_launch_description():
     bringup_pkg = get_package_share_directory('orion_bringup')
     description_pkg = get_package_share_directory('orion_description')
     simulation_pkg = get_package_share_directory('orion_simulation')
+    joy_pkg = get_package_share_directory('orion_joy')
+    drive_pkg = get_package_share_directory('drive')
     
-    robot_description_dir = os.path.join(description_pkg, 'urdf', 'robot.urdf.xacro')
     default_world = os.path.join(simulation_pkg,'worlds','empty.world')    
     
     rsp = IncludeLaunchDescription(
@@ -71,16 +75,6 @@ def generate_launch_description():
         arguments=["joint_broad"],
     )
 
-    delayed_diff_drive_spawner = TimerAction(
-        period=8.0,  # seconds
-        actions=[diff_drive_spawner]
-    )
-
-    delayed_joint_broad_spawner = TimerAction(
-        period=8.0,  # seconds
-        actions=[joint_broad_spawner]
-    )
-
     bridge_params = os.path.join(bringup_pkg,'config','gz_bridge.yaml')
     ros_gz_bridge = Node(
         package="ros_gz_bridge",
@@ -92,14 +86,39 @@ def generate_launch_description():
         ]
     )
 
+    joy_params = os.path.join(bringup_pkg,'config','joystick.yaml')
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        output='screen'
+    )
+    
+    teleop_node = Node(
+        package='teleop_twist_joy',
+        executable='teleop_node',
+        name='teleop_node',
+        output='screen',
+        parameters=[joy_params],
+        remappings=[('/cmd_vel', '/diff_cont/cmd_vel_unstamped')]
+    )
+
+
     # Launch them all!
     return LaunchDescription([
         rsp,
+        
+        joy_node,
+        teleop_node,
+
         world_arg,
         gazebo,
         spawn_entity,
         rviz_launch,
-        delayed_diff_drive_spawner,
-        delayed_joint_broad_spawner,
+
+        TimerAction(period=10.0, actions=[diff_drive_spawner]),
+        TimerAction(period=10.0, actions=[joint_broad_spawner]),
+
         ros_gz_bridge,
+        
     ])
