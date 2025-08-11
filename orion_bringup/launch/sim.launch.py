@@ -4,7 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.actions import TimerAction
@@ -17,7 +17,8 @@ import xacro
 
 def generate_launch_description():
     
-
+    # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/diff_cont/cmd_vel_unstamped
+    # 
     bringup_pkg = get_package_share_directory('orion_bringup')
     description_pkg = get_package_share_directory('orion_description')
     simulation_pkg = get_package_share_directory('orion_simulation')
@@ -114,7 +115,7 @@ def generate_launch_description():
         gazebo,
         spawn_entity,
         rviz_launch,
-        
+
         TimerAction(period=10.0, actions=[diff_drive_spawner]),
         TimerAction(period=10.0, actions=[joint_broad_spawner]),
 
