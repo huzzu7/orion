@@ -55,10 +55,9 @@
       </link>
     </model>
 
-    <!-- ✅ Square Box to the Left of Robot -->
     <model name="obstacle_box">
       <static>true</static>
-      <pose>-1 0 0.5 0 0 0</pose>
+      <pose>-4 2 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision">
           <geometry>
